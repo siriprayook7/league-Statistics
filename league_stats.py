@@ -6,7 +6,7 @@
 # RGAPI-cbb79528-bec1-4266-bfdb-e9dd97ab5e93
 # 
 
-import requests, json
+import requests, json, sys
 
 myAPI_Key = "RGAPI-cbb79528-bec1-4266-bfdb-e9dd97ab5e93"
 region = "oce"
@@ -22,9 +22,20 @@ def getRecentGames(summonerID):
 	return response.json()
 
 #execution starts here
-sumName = (str)(input("Enter OCE summoner name: "))
-IDresponse = getSummonerID(sumName)
-sumID = IDresponse[sumName]["id"]
-print (sumID)
-historyResponse = getRecentGames(sumID)
-print (historyResponse)
+for sumName in sys.argv[1:]:
+	print (sumName)
+	IDresponse = getSummonerID(sumName)
+	sumID = IDresponse[sumName]["id"]
+	print (sumID)
+	historyResponse = getRecentGames(sumID) # max 10 games in history
+	for currGame in historyResponse["games"]:
+		if currGame["gameType"] == "MATCHED_GAME" and currGame["gameMode"] == "CLASSIC":
+			if currGame["subType"] == "NORMAL":
+				print ("normal game")
+			elif currGame["subType"] == "RANKED_SOLO_5x5" or "RANKED_FLEX_SR":
+				print ("ranked game")
+			else:
+				continue
+		else:
+			continue
+
