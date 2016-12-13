@@ -22,17 +22,17 @@ def getRecentGames(summonerID):
 	return response.json()
 
 def getMatch(gameID):
-	url = "https://" + region + ".api.pvp.net/api/lol/" + region + "/v2.2/match/" + str(gameID) + "?includeTimeline=yes&api_key=" + myAPI_Key
+	url = "https://" + region + ".api.pvp.net/api/lol/" + region + "/v2.2/match/" + str(gameID) + "?includeTimeline=True&api_key=" + myAPI_Key
 	response = requests.get(url)
 	return response.json()
 
 def grabPlayerStats(game):
 	playerLane = game["stats"]["playerPosition"]
 	timePlayed = game["stats"]["timePlayed"]
+	return timePlayed
 
-
-def grabMatchStats(game, sumID):
-	matchLength = game["matchDuration"]
+def grabMatchStats(game, sumID, duration):
+	matchLength = duration
 	for player in game["participantIdentities"]:
 		if player["player"]["summonerId"] == sumID:
 			gameID = player["participantId"] # gets game player ID (between 1-10)
@@ -64,15 +64,79 @@ def grabMatchStats(game, sumID):
 			totalDmgtoChamps = participant["stats"]["totalDamageDealtToChampions"]
 			totalDmgTaken = participant["stats"]["totalDamageTaken"]
 			totalTimeCCDealt = participant["stats"]["totalTimeCrowdControlDealt"]
-			MinionKills = participant["stats"]["minionsKilled"]
+			totalCS = participant["stats"]["minionsKilled"]
 			NeutralMinionKills = participant["stats"]["neutralMinionsKilled"]
-			NeutralTeamJungleKills = participant["stats"]["neutralMinionsKilledTeamJungle"]
-			NeutralEnemyJungleKills = participant["stats"]["neutralMinionsKilledEnemyJungle"]
+			teamJngCS = participant["stats"]["neutralMinionsKilledTeamJungle"]
+			enemyJngCS = participant["stats"]["neutralMinionsKilledEnemyJungle"]
 			wardsPlaced = participant["stats"]["wardsPlaced"]
 			wardsKilled = participant["stats"]["wardsKilled"]
 			visionWardsBought = participant["stats"]["visionWardsBoughtInGame"]
 			winner = participant["stats"]["winner"]
-
+			# participant timeline stats
+			if participant["timeline"]["lane"] == "BOTTOM" or participant["timeline"]["lane"] == "JUNGLE":
+				CSperMin10 = participant["timeline"]["creepsPerMinDeltas"]["zeroToTen"]
+				CSperMin20 = participant["timeline"]["creepsPerMinDeltas"]["tenToTwenty"]
+				xpPerMin10 = participant["timeline"]["xpPerMinDeltas"]["zeroToTen"]
+				xpPerMin20 = participant["timeline"]["xpPerMinDeltas"]["tenToTwenty"]
+				dmgTakenPerMin10 = participant["timeline"]["damageTakenPerMinDeltas"]["zeroToTen"]
+				dmgTakenPerMin20 = participant["timeline"]["damageTakenPerMinDeltas"]["tenToTwenty"]
+				goldPerMin10 = participant["timeline"]["goldPerMinDeltas"]["zeroToTen"]
+				goldPerMin20 = participant["timeline"]["goldPerMinDeltas"]["tenToTwenty"]
+				if matchLength > 2400:
+					CSperMin30 = participant["timeline"]["creepsPerMinDeltas"]["thirtyToEnd"]
+					CSperMin20 = participant["timeline"]["creepsPerMinDeltas"]["twentyToThirty"]
+					xpPerMin20 = participant["timeline"]["xpPerMinDeltas"]["twentyToThirty"]
+					xpPerMin30 = participant["timeline"]["xpPerMinDeltas"]["thirtyToEnd"]
+					dmgTakenPerMin20 = participant["timeline"]["damageTakenPerMinDeltas"]["twentyToThirty"]
+					dmgTakenPerMin30 = participant["timeline"]["damageTakenPerMinDeltas"]["thirtyToEnd"]
+					goldPerMin20 = participant["timeline"]["goldPerMinDeltas"]["twentyToThirty"]
+					goldPerMin30 = participant["timeline"]["goldPerMinDeltas"]["thirtyToEnd"]
+				elif matchLength > 1800:
+					CSperMin20 = participant["timeline"]["creepsPerMinDeltas"]["twentyToThirty"]
+					xpPerMin20 = participant["timeline"]["xpPerMinDeltas"]["twentyToThirty"]
+					dmgTakenPerMin20 = participant["timeline"]["damageTakenPerMinDeltas"]["twentyToThirty"]
+					goldPerMin20 = participant["timeline"]["goldPerMinDeltas"]["twentyToThirty"]
+			else:				
+				CSperMin10 = participant["timeline"]["creepsPerMinDeltas"]["zeroToTen"]
+				CSperMin20 = participant["timeline"]["creepsPerMinDeltas"]["tenToTwenty"]
+				CSdiffPerMin10 = participant["timeline"]["csDiffPerMinDeltas"]["zeroToTen"]
+				CSdiffPerMin20 = participant["timeline"]["csDiffPerMinDeltas"]["tenToTwenty"]
+				xpPerMin10 = participant["timeline"]["xpPerMinDeltas"]["zeroToTen"]
+				xpPerMin20 = participant["timeline"]["xpPerMinDeltas"]["tenToTwenty"]
+				xpDiffPerMin10 = participant["timeline"]["xpDiffPerMinDeltas"]["zeroToTen"]
+				xpDiffPerMin20 = participant["timeline"]["xpDiffPerMinDeltas"]["tenToTwenty"]
+				dmgTakenPerMin10 = participant["timeline"]["damageTakenPerMinDeltas"]["zeroToTen"]
+				dmgTakenPerMin20 = participant["timeline"]["damageTakenPerMinDeltas"]["tenToTwenty"]
+				dmgDiffPerMin10 = participant["timeline"]["damageTakenDiffPerMinDeltas"]["zeroToTen"]
+				dmgDiffPerMin20 = participant["timeline"]["damageTakenDiffPerMinDeltas"]["tenToTwenty"]
+				goldPerMin10 = participant["timeline"]["goldPerMinDeltas"]["zeroToTen"]
+				goldPerMin20 = participant["timeline"]["goldPerMinDeltas"]["tenToTwenty"]
+				if matchLength > 2400:
+					CSperMin30 = participant["timeline"]["creepsPerMinDeltas"]["thirtyToEnd"]
+					CSperMin20 = participant["timeline"]["creepsPerMinDeltas"]["twentyToThirty"]
+					CSdiffPerMin20 = participant["timeline"]["csDiffPerMinDeltas"]["twentyToThirty"]
+					CSdiffPerMin30 = participant["timeline"]["csDiffPerMinDeltas"]["thirtyToEnd"]
+					xpPerMin20 = participant["timeline"]["xpPerMinDeltas"]["twentyToThirty"]
+					xpPerMin30 = participant["timeline"]["xpPerMinDeltas"]["thirtyToEnd"]
+					xpDiffPerMin20 = participant["timeline"]["xpDiffPerMinDeltas"]["twentyToThirty"]
+					xpDiffPerMin30 = participant["timeline"]["xpDiffPerMinDeltas"]["thirtyToEnd"]
+					dmgTakenPerMin20 = participant["timeline"]["damageTakenPerMinDeltas"]["twentyToThirty"]
+					dmgTakenPerMin30 = participant["timeline"]["damageTakenPerMinDeltas"]["thirtyToEnd"]
+					dmgDiffPerMin20 = participant["timeline"]["damageTakenDiffPerMinDeltas"]["twentyToThirty"]
+					dmgDiffPerMin30 = participant["timeline"]["damageTakenDiffPerMinDeltas"]["thirtyToEnd"]
+					goldPerMin20 = participant["timeline"]["goldPerMinDeltas"]["twentyToThirty"]
+					goldPerMin30 = participant["timeline"]["goldPerMinDeltas"]["thirtyToEnd"]
+				elif matchLength > 1800:
+					CSperMin20 = participant["timeline"]["creepsPerMinDeltas"]["twentyToThirty"]
+					CSdiffPerMin20 = participant["timeline"]["csDiffPerMinDeltas"]["twentyToThirty"]
+					xpPerMin20 = participant["timeline"]["xpPerMinDeltas"]["twentyToThirty"]
+					xpDiffPerMin20 = participant["timeline"]["xpDiffPerMinDeltas"]["twentyToThirty"]
+					dmgTakenPerMin20 = participant["timeline"]["damageTakenPerMinDeltas"]["twentyToThirty"]
+					dmgDiffPerMin20 = participant["timeline"]["damageTakenDiffPerMinDeltas"]["twentyToThirty"]
+					goldPerMin20 = participant["timeline"]["goldPerMinDeltas"]["twentyToThirty"]
+	numFrames = len(game["timeline"]["frames"])
+	#for i in range(0, numFrames):
+	#	timelineInfo[]
 
 #execution starts here
 for sumName in sys.argv[1:]:
@@ -85,12 +149,14 @@ for sumName in sys.argv[1:]:
 		if currGame["gameType"] == "MATCHED_GAME" and currGame["gameMode"] == "CLASSIC":
 			if currGame["subType"] == "NORMAL":
 				print ("normal game")
+				gameID = currGame["gameId"]
+				print (gameID)
 			elif currGame["subType"] == "RANKED_SOLO_5x5" or "RANKED_FLEX_SR":
-				grabPlayerStats(currGame)
+				duration = grabPlayerStats(currGame)
 				gameID = currGame["gameId"]
 				print (gameID)
 				matchResponse = getMatch(gameID)
-				grabMatchStats(matchResponse, sumID)
+				grabMatchStats(matchResponse, sumID, duration)
 			else:
 				continue
 		else:
