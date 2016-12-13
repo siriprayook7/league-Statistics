@@ -134,9 +134,17 @@ def grabMatchStats(game, sumID, duration):
 					dmgTakenPerMin20 = participant["timeline"]["damageTakenPerMinDeltas"]["twentyToThirty"]
 					dmgDiffPerMin20 = participant["timeline"]["damageTakenDiffPerMinDeltas"]["twentyToThirty"]
 					goldPerMin20 = participant["timeline"]["goldPerMinDeltas"]["twentyToThirty"]
-	numFrames = len(game["timeline"]["frames"])
-	#for i in range(0, numFrames):
-	#	timelineInfo[]
+
+	# MATCH timeline Stats (per minute frames)
+	TL_gold = []
+	TL_cs = []
+	TL_jngCS = []
+	TL_xp = []
+	for interval in game["timeline"]["frames"]:
+		TL_gold.append(interval["participantFrames"][str(gameID)]["totalGold"])
+		TL_cs.append(interval["participantFrames"][str(gameID)]["minionsKilled"])
+		TL_jngCS.append(interval["participantFrames"][str(gameID)]["jungleMinionsKilled"])
+		TL_xp.append(interval["participantFrames"][str(gameID)]["xp"])
 
 #execution starts here
 for sumName in sys.argv[1:]:
