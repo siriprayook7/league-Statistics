@@ -65,7 +65,7 @@ def grabMatchStats(game, sumID, duration):
 			totalDmgTaken = participant["stats"]["totalDamageTaken"]
 			totalTimeCCDealt = participant["stats"]["totalTimeCrowdControlDealt"]
 			totalCS = participant["stats"]["minionsKilled"]
-			NeutralMinionKills = participant["stats"]["neutralMinionsKilled"]
+			totalJngCS = participant["stats"]["neutralMinionsKilled"]
 			teamJngCS = participant["stats"]["neutralMinionsKilledTeamJungle"]
 			enemyJngCS = participant["stats"]["neutralMinionsKilledEnemyJungle"]
 			wardsPlaced = participant["stats"]["wardsPlaced"]
@@ -134,18 +134,89 @@ def grabMatchStats(game, sumID, duration):
 					dmgTakenPerMin20 = participant["timeline"]["damageTakenPerMinDeltas"]["twentyToThirty"]
 					dmgDiffPerMin20 = participant["timeline"]["damageTakenDiffPerMinDeltas"]["twentyToThirty"]
 					goldPerMin20 = participant["timeline"]["goldPerMinDeltas"]["twentyToThirty"]
+			break
 
-	# MATCH timeline Stats (per minute frames)
-	TL_gold = []
-	TL_cs = []
-	TL_jngCS = []
-	TL_xp = []
-	for interval in game["timeline"]["frames"]:
-		TL_gold.append(interval["participantFrames"][str(gameID)]["totalGold"])
-		TL_cs.append(interval["participantFrames"][str(gameID)]["minionsKilled"])
-		TL_jngCS.append(interval["participantFrames"][str(gameID)]["jungleMinionsKilled"])
-		TL_xp.append(interval["participantFrames"][str(gameID)]["xp"])
+	# TEAM stats (stats not included in API)
+	totalTeamKills = 0
+	totalTeamDeaths = 0
+	totalTeamAssists = 0
+	totalTeamCS = 0
+	totalTeamGold = 0
+	totalTeamWardsPlaced = 0
+	totalTeamWardsDestroyed = 0
+	totalTeamVisionWards = 0
+	totalTeamDmg = 0
+	totalTeamDmgToChamps = 0
+	totalTeamDmgTaken = 0
+	firstDragTime = 0
+	firstTowerTime = 0
+	matchTotalDrags = 0
+	matchTotalBarons = 0
 
+	# TEAM Stats
+	for side in game["teams"]:
+		if side["teamId"] == teamID:
+			numBarons = side["baronKills"]
+			numDrags = side["dragonKills"]
+			numHeralds = side["riftHeraldKills"]
+			numTowers = side["towerKills"]
+			numInhibs = side["inhibitorKills"]
+			firstBlood = side["firstBlood"]
+			firstBaron = side["firstBaron"]
+			firstDrag = side["firstDragon"]
+			firstTower = side["firstTower"]
+			firstInhib = side["firstInhibitor"]
+		else:
+			enemyNumBarons = side["baronKills"]
+			enemyNumDrags = side["dragonKills"]
+			enemyNumHeralds = side["riftHeraldKills"]
+			enemyNumTowers = side["towerKills"]
+			enemyNumInhibs = side["inhibitorKills"]
+	matchTotalDrags = numDrags + enemyNumDrags
+	matchTotalBarons = numBarons + enemyNumBarons
+
+	for person in game["participants"]:
+		if person["teamId"] == teamID:
+			totalTeamKills += person["stats"]["kills"]
+			totalTeamDeaths += person["stats"]["deaths"]
+			totalTeamAssists += person["stats"]["assists"]
+			totalTeamCS += person["stats"]["minionsKilled"]
+			totalTeamGold += person["stats"]["goldEarned"]
+			totalTeamWardsPlaced += person["stats"]["wardsPlaced"]
+			totalTeamWardsDestroyed += person["stats"]["wardsKilled"]
+			totalTeamVisionWards += person["stats"]["visionWardsBoughtInGame"]
+			totalTeamDmg += person["stats"]["totalDamageDealt"]
+			totalTeamDmgToChamps += person["stats"]["totalDamageDealtToChampions"]
+			totalTeamDmgTaken += person["stats"]["totalDamageTaken"]
+
+	# PLAYER timeline Stats (per minute frames)
+	# first dragon time and first turret time can be retrieved from here somehow
+	timeline_gold = []
+	timeline_cs = []
+	timeline_jngCS = []
+	timeline_xp = []
+	for interval in game["timeline"]["frames"][1:]: # skips initial frame
+		timeline_gold.append(interval["participantFrames"][str(gameID)]["totalGold"])
+		timeline_cs.append(interval["participantFrames"][str(gameID)]["minionsKilled"])
+		timeline_jngCS.append(interval["participantFrames"][str(gameID)]["jungleMinionsKilled"])
+		timeline_xp.append(interval["participantFrames"][str(gameID)]["xp"])
+		if numDrags != 0 and firstDragTime == 0: 
+			for event in interval["events"]:
+				if event["eventType"] == "ELITE_MONSTER_KILL":
+					if event["monsterType"] == "DRAGON":
+						if game["participants"][(event["killerId"]-1)]["teamId"] == teamID:
+							firstDragTime = event["timestamp"] # in milliseconds
+							break
+		elif numTowers != 0 and firstTowerTime == 0:
+			for x in interval["events"]:
+				if x["eventType"] == "BUILDING_KILL":
+					if x["teamId"] != teamID: # if its not your own tower being destroyed
+						firstTowerTime = event["timestamp"] # in milliseconds
+						break
+
+	print ("DRAGON:" + str(firstDragTime))
+	print ("TOWER:" + str(firstTowerTime))
+	print ("len timeline:" + str(len(timeline_gold)))
 #execution starts here
 for sumName in sys.argv[1:]:
 	print (sumName)
