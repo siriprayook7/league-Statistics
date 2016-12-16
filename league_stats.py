@@ -10,6 +10,11 @@ import requests, json, sys
 
 myAPI_Key = "RGAPI-cbb79528-bec1-4266-bfdb-e9dd97ab5e93"
 region = "oce"
+visionWard = 2055 # i.e control ward item id
+roleTop = 1
+roleMid = 2
+roleJungle = 3
+roleBot = 4
 
 def getSummonerID(summonerName):
 	url = "https://" + region + ".api.pvp.net/api/lol/" + region + "/v1.4/summoner/by-name/" + summonerName + "?api_key=" + myAPI_Key
@@ -74,6 +79,7 @@ def grabMatchStats(game, sumID, duration):
 			winner = participant["stats"]["winner"]
 			# participant timeline stats
 			if participant["timeline"]["lane"] == "BOTTOM" or participant["timeline"]["lane"] == "JUNGLE":
+				botLaneRole = participant["timeline"]["role"]
 				CSperMin10 = participant["timeline"]["creepsPerMinDeltas"]["zeroToTen"]
 				CSperMin20 = participant["timeline"]["creepsPerMinDeltas"]["tenToTwenty"]
 				xpPerMin10 = participant["timeline"]["xpPerMinDeltas"]["zeroToTen"]
@@ -150,6 +156,8 @@ def grabMatchStats(game, sumID, duration):
 	totalTeamDmgTaken = 0
 	firstDragTime = 0
 	firstTowerTime = 0
+	firstSightstoneTime = 0
+	firstVisionWardTime = 0
 	matchTotalDrags = 0
 	matchTotalBarons = 0
 
@@ -190,7 +198,7 @@ def grabMatchStats(game, sumID, duration):
 			totalTeamDmgTaken += person["stats"]["totalDamageTaken"]
 
 	# PLAYER timeline Stats (per minute frames)
-	# first dragon time and first turret time can be retrieved from here somehow
+	# extract time related stats here e.g. first drag time, first tower time
 	timeline_gold = []
 	timeline_cs = []
 	timeline_jngCS = []
@@ -211,25 +219,25 @@ def grabMatchStats(game, sumID, duration):
 			for x in interval["events"]:
 				if x["eventType"] == "BUILDING_KILL":
 					if x["teamId"] != teamID: # if its not your own tower being destroyed
-						firstTowerTime = event["timestamp"] # in milliseconds
+						firstTowerTime = x["timestamp"] # in milliseconds
 						break
-
-	print ("DRAGON:" + str(firstDragTime))
-	print ("TOWER:" + str(firstTowerTime))
-	print ("len timeline:" + str(len(timeline_gold)))
+		elif visionWardsBought != 0 and firstVisionWardTime == 0:
+			for y in interval["events"]:
+				if y["eventType"] == "ITEM_PURCHASED":
+					if y["participantId"] == gameID and y["itemId"] == visionWard:
+						firstVisionWardTime = y["timestamp"] # in milliseconds
+						break
 #execution starts here
 for sumName in sys.argv[1:]:
 	print (sumName)
 	IDresponse = getSummonerID(sumName)
 	sumID = IDresponse[sumName]["id"]
-	print (sumID)
 	historyResponse = getRecentGames(sumID) # max 10 games in history
 	for currGame in historyResponse["games"]:
 		if currGame["gameType"] == "MATCHED_GAME" and currGame["gameMode"] == "CLASSIC":
 			if currGame["subType"] == "NORMAL":
 				print ("normal game")
 				gameID = currGame["gameId"]
-				print (gameID)
 			elif currGame["subType"] == "RANKED_SOLO_5x5" or "RANKED_FLEX_SR":
 				duration = grabPlayerStats(currGame)
 				gameID = currGame["gameId"]
@@ -239,5 +247,6 @@ for sumName in sys.argv[1:]:
 			else:
 				continue
 		else:
+			print ("other GameMode")
 			continue
 
