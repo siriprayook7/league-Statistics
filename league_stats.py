@@ -4,9 +4,11 @@
 # LEAGUE STATS
 # 580121
 # RGAPI-cbb79528-bec1-4266-bfdb-e9dd97ab5e93
-# 
+# client ID: 696143935174-8090lf614qrfuknegrj8j5khit32s9dq.apps.googleusercontent.com
+# client Secret: HNyRfEPupPSGNVbEOjK_YlPt  
 
-import requests, json, sys
+import requests, json, sys, gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 myAPI_Key = "RGAPI-cbb79528-bec1-4266-bfdb-e9dd97ab5e93"
 region = "oce"
@@ -45,6 +47,7 @@ def grabMatchStats(game, sumID, duration):
 	for participant in game["participants"]:
 		if participant["participantId"] == gameID:
 			teamID = participant["teamId"]
+			championID = participant["championId"]
 			# get participant stats
 			kills = participant["stats"]["kills"]
 			deaths = participant["stats"]["deaths"]
@@ -156,6 +159,7 @@ def grabMatchStats(game, sumID, duration):
 	totalTeamDmgTaken = 0
 	firstDragTime = 0
 	firstTowerTime = 0
+	rift_HeraldTime = 0
 	firstSightstoneTime = 0
 	firstVisionWardTime = 0
 	matchTotalDrags = 0
@@ -215,19 +219,31 @@ def grabMatchStats(game, sumID, duration):
 						if game["participants"][(event["killerId"]-1)]["teamId"] == teamID:
 							firstDragTime = event["timestamp"] # in milliseconds
 							break
-		elif numTowers != 0 and firstTowerTime == 0:
+		if numTowers != 0 and firstTowerTime == 0:
 			for x in interval["events"]:
 				if x["eventType"] == "BUILDING_KILL":
 					if x["teamId"] != teamID: # if its not your own tower being destroyed
 						firstTowerTime = x["timestamp"] # in milliseconds
 						break
-		elif visionWardsBought != 0 and firstVisionWardTime == 0:
+		if numHeralds != 0 and rift_HeraldTime == 0:
 			for y in interval["events"]:
-				if y["eventType"] == "ITEM_PURCHASED":
-					if y["participantId"] == gameID and y["itemId"] == visionWard:
-						firstVisionWardTime = y["timestamp"] # in milliseconds
+				if y["eventType"] == "ELITE_MONSTER_KILL"
+					if y["monsterType"] == "RIFTHERALD":
+						rift_HeraldTime = y["timestamp"] # in milliseconds
+
+		if visionWardsBought != 0 and firstVisionWardTime == 0:
+			for z in interval["events"]:
+				if z["eventType"] == "ITEM_PURCHASED":
+					if z["participantId"] == gameID and z["itemId"] == visionWard:
+						firstVisionWardTime = z["timestamp"] # in milliseconds
 						break
-#execution starts here
+
+def googleDocs():
+	gc = gspread.authorize()
+
+##########################################################################################################
+######                        execution starts here                                                 ######
+##########################################################################################################
 for sumName in sys.argv[1:]:
 	print (sumName)
 	IDresponse = getSummonerID(sumName)
