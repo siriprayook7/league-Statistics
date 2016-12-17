@@ -227,7 +227,7 @@ def grabMatchStats(game, sumID, duration):
 						break
 		if numHeralds != 0 and rift_HeraldTime == 0:
 			for y in interval["events"]:
-				if y["eventType"] == "ELITE_MONSTER_KILL"
+				if y["eventType"] == "ELITE_MONSTER_KILL":
 					if y["monsterType"] == "RIFTHERALD":
 						rift_HeraldTime = y["timestamp"] # in milliseconds
 
@@ -239,30 +239,42 @@ def grabMatchStats(game, sumID, duration):
 						break
 
 def googleDocs():
-	gc = gspread.authorize()
+	scope = ["https://spreadsheets.google.com/feeds"]
+	credentials = ServiceAccountCredentials.from_json_keyfile_name("leagueSTATS-69cc883763dc.json", scope)
+	gd = gspread.authorize(credentials)
+	updateExcel(gd)
+
+def updateExcel(gd):
+	spreadSheet = gd.open("League Statistics").sheet1
+	val = spreadSheet.acell("A2")
+	sName = spreadSheet.acell("A1")
+	print (sName.value + ": " + str(val.value))
+	val.value = int(val.value) + 4
+	print ("new val = " + str(val.value))
 
 ##########################################################################################################
 ######                        execution starts here                                                 ######
 ##########################################################################################################
-for sumName in sys.argv[1:]:
-	print (sumName)
-	IDresponse = getSummonerID(sumName)
-	sumID = IDresponse[sumName]["id"]
-	historyResponse = getRecentGames(sumID) # max 10 games in history
-	for currGame in historyResponse["games"]:
-		if currGame["gameType"] == "MATCHED_GAME" and currGame["gameMode"] == "CLASSIC":
-			if currGame["subType"] == "NORMAL":
-				print ("normal game")
-				gameID = currGame["gameId"]
-			elif currGame["subType"] == "RANKED_SOLO_5x5" or "RANKED_FLEX_SR":
-				duration = grabPlayerStats(currGame)
-				gameID = currGame["gameId"]
-				print (gameID)
-				matchResponse = getMatch(gameID)
-				grabMatchStats(matchResponse, sumID, duration)
-			else:
-				continue
-		else:
-			print ("other GameMode")
-			continue
+googleDocs()
+# for sumName in sys.argv[1:]:
+# 	print (sumName)
+# 	IDresponse = getSummonerID(sumName)
+# 	sumID = IDresponse[sumName]["id"]
+# 	historyResponse = getRecentGames(sumID) # max 10 games in history
+# 	for currGame in historyResponse["games"]:
+# 		if currGame["gameType"] == "MATCHED_GAME" and currGame["gameMode"] == "CLASSIC":
+# 			if currGame["subType"] == "NORMAL":
+# 				print ("normal game")
+# 				gameID = currGame["gameId"]
+# 			elif currGame["subType"] == "RANKED_SOLO_5x5" or "RANKED_FLEX_SR":
+# 				duration = grabPlayerStats(currGame)
+# 				gameID = currGame["gameId"]
+# 				print (gameID)
+# 				matchResponse = getMatch(gameID)
+# 				grabMatchStats(matchResponse, sumID, duration)
+# 			else:
+# 				continue
+# 		else:
+# 			print ("other GameMode")
+# 			continue
 
