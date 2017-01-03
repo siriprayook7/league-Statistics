@@ -349,7 +349,7 @@ def grabMatchStats(game, sumID, lane, sheet, gameResponse):
 			continue
 		else:
 			for playerDto in gameResponse["fellowPlayers"]:
-				if noob == playerDto["summonerId"] and playerDto["teamId"] == teamID:
+				if noob == str(playerDto["summonerId"]) and playerDto["teamId"] == teamID:
 					playedWith.append(noob)
 
 	# get champ name
@@ -1031,6 +1031,10 @@ def updateSheet(gd,sumID,tID,role,matchDuration,kills,deaths,assists,gold,champL
 		if win:
 			champWins = general.cell((playerChamps.row+2),nextFreeColumn)
 			champWins.value = 1
+			cellsToUpdate.append(champWins)
+		else:
+			champWins = general.cell((playerChamps.row+2),nextFreeColumn)
+			champWins.value = 0
 			cellsToUpdate.append(champWins)
 		champKills = general.cell((playerChamps.row+3),nextFreeColumn)
 		champDeaths = general.cell((playerChamps.row+4),nextFreeColumn)
